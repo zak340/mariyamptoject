@@ -77,48 +77,54 @@ def main():
         sys.exit(1)
     
     try:
-        # Get user input
-        crop_type, city = get_user_input()
-        
-        if crop_type is None:
-            print("\n👋 Thank you for using Smart Irrigation Advice Chatbot. Goodbye!")
-            sys.exit(0)
-        
-        # Fetch weather data
-        print(f"\n🌤️  Fetching weather data for {city}...")
-        try:
-            weather_info = get_weather_data(city)
-            print("✅ Weather data retrieved successfully!")
-        except WeatherAPIError as e:
-            print(f"\n❌ Weather API Error: {str(e)}")
-            print("   Please check your city name and try again.")
-            sys.exit(1)
-        
-        # Get irrigation recommendation from LLM
-        print(f"🤖 Generating irrigation recommendations for {crop_type}...")
-        try:
-            recommendation = get_irrigation_recommendation(crop_type, weather_info)
-            print("✅ Recommendation generated successfully!\n")
-        except LLMIntegrationError as e:
-            print(f"\n❌ LLM Integration Error: {str(e)}")
-            print("   Please check your OpenAI API key and try again.")
-            sys.exit(1)
-        
-        # Display formatted output
-        output = format_recommendation_output(crop_type, weather_info, recommendation)
-        print(output)
-        
-        # Ask if user wants to get another recommendation
+        # Main loop to allow multiple recommendations without recursion
         while True:
-            another = input("\nWould you like to get another recommendation? (yes/no): ").strip().lower()
-            if another in ['yes', 'y']:
-                main()  # Recursively call main to start over
-                break
-            elif another in ['no', 'n', 'exit', 'quit']:
+            # Get user input
+            crop_type, city = get_user_input()
+            
+            if crop_type is None:
                 print("\n👋 Thank you for using Smart Irrigation Advice Chatbot. Goodbye!")
-                break
-            else:
-                print("⚠️  Please enter 'yes' or 'no'.")
+                sys.exit(0)
+            
+            # Fetch weather data
+            print(f"\n🌤️  Fetching weather data for {city}...")
+            try:
+                weather_info = get_weather_data(city)
+                print("✅ Weather data retrieved successfully!")
+            except WeatherAPIError as e:
+                print(f"\n❌ Weather API Error: {str(e)}")
+                print("   Please check your city name and try again.")
+                # Ask if they want to retry instead of exiting
+                retry = input("\nWould you like to try again? (yes/no): ").strip().lower()
+                if retry in ['yes', 'y']:
+                    continue
+                else:
+                    sys.exit(1)
+            
+            # Get irrigation recommendation from LLM
+            print(f"🤖 Generating irrigation recommendations for {crop_type}...")
+            try:
+                recommendation = get_irrigation_recommendation(crop_type, weather_info)
+                print("✅ Recommendation generated successfully!\n")
+            except LLMIntegrationError as e:
+                print(f"\n❌ LLM Integration Error: {str(e)}")
+                print("   Please check your OpenAI API key and try again.")
+                sys.exit(1)
+            
+            # Display formatted output
+            output = format_recommendation_output(crop_type, weather_info, recommendation)
+            print(output)
+            
+            # Ask if user wants to get another recommendation
+            while True:
+                another = input("\nWould you like to get another recommendation? (yes/no): ").strip().lower()
+                if another in ['yes', 'y']:
+                    break  # Break inner loop to continue outer loop
+                elif another in ['no', 'n', 'exit', 'quit']:
+                    print("\n👋 Thank you for using Smart Irrigation Advice Chatbot. Goodbye!")
+                    sys.exit(0)
+                else:
+                    print("⚠️  Please enter 'yes' or 'no'.")
         
     except KeyboardInterrupt:
         print("\n\n👋 Program interrupted. Goodbye!")
