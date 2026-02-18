@@ -11,6 +11,8 @@ on:
 jobs:
   lint-and-verify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ['3.10', '3.11']
